@@ -52,6 +52,16 @@ app.event('app_mention', async ({ event, client }) => {
 					channel: event.channel,
 				});
 				break;
+		  case 'leaderboard':
+				console.log('leaderboard');
+				let text = '';
+				const players = await Player.find({});
+				players.forEach((player, index) => text += `${index + 1}. ${player.name} ${player.elo} record: ${player.wins}-${player.losses}\n` );
+				await client.chat.postMessage({
+					text,
+					channel: event.channel,
+				});
+				break;
 		  default:
 				await client.chat.postMessage({
 					text: 'Unrecognized action. Try `register`, `match` or `leaderboard`.',
