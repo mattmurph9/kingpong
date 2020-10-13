@@ -1,5 +1,6 @@
 const { App } = require('@slack/bolt');
-const { connectToDb, Player } = require('./db.js');
+const { connectToDb, Player } = require('./db');
+const { getNewRating } = require('./elo');
 
 // Connect to slack with bolt
 const app = new App({
@@ -28,22 +29,32 @@ app.event('app_mention', async ({ event, client }) => {
 				console.log('register');
 				await Player.create({ name: words[2], wins: 0, losses: 0, elo: 1000 });
 				await client.chat.postMessage({
-					text: 'Unrecognized action. Try `register` or `match`.',
+					text: `Successfully registered ${words[2]}`,
 					channel: event.channel,
 				});
 				break;
 			case 'match':
 				console.log('match');
-				const player1 = words[2];
-				const player2 = words[3];
+				// Get players from db
+				const player1 = await Player.findOne({ name: words[2]}).exec();
+				const player2 = await Player.findOne({ name: words[3]}).exec();
+				// Compute new ELO for each player
+				const player1NewElo = getNewRating(player1.elo, player2.elo, 1);
+				const player2NewElo = getNewRating(player2.elo, player1.elo, 0);
+				// Update each player and save to db
+				player1.elo = player1NewElo;
+				player2.elo = player2NewElo;
+				player1.save();
+				player2.save();
+				// Post message reporting new rankings
 				client.chat.postMessage({
-					text: words[2],
+					text: `Updated rankings are:\n${player1.name}: ${ player1NewElo}\n${player2.name}: ${ player2NewElo}`,
 					channel: event.channel,
 				});
 				break;
 		  default:
 				await client.chat.postMessage({
-					text: 'Unrecognized action. Try `register` or `match`.',
+					text: 'Unrecognized action. Try `register`, `match` or `leaderboard`.',
 					channel: event.channel,
 				});
 		}
@@ -54,6 +65,7 @@ app.event('app_mention', async ({ event, client }) => {
 				channel: event.channel,
 			});
 		} else {
+			console.log(e);
 			await client.chat.postMessage({
 				text: 'There was an error. Please try again.',
 				channel: event.channel,
