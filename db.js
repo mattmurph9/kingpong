@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const playerSchema = mongoose.Schema({
+  _id: String,
 	name: { type: String, unique: true },
 	wins: Number,
 	losses: Number,

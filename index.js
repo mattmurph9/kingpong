@@ -27,17 +27,17 @@ app.event('app_mention', async ({ event, client }) => {
 		switch(action) {
 			case 'register':
 				console.log('register');
-				await Player.create({ name: words[2], wins: 0, losses: 0, elo: 1000 });
+				await Player.create({ _id: event.user, name: words[2], wins: 0, losses: 0, elo: 1000 });
 				await client.chat.postMessage({
-					text: `Successfully registered ${words[2]}`,
+					text: `Successfully registered <@${event.user}> as ${words[2]}`,
 					channel: event.channel,
 				});
 				break;
 			case 'match':
 				console.log('match');
 				// Get players from db
-				const player1 = await Player.findOne({ name: words[2]}).exec();
-				const player2 = await Player.findOne({ name: words[3]}).exec();
+				const player1 = await Player.findById(words[2]).exec();
+				const player2 = await Player.findById(words[3]).exec();
 				// Compute new ELO for each player
 				const player1NewElo = getNewRating(player1.elo, player2.elo, 1);
 				const player2NewElo = getNewRating(player2.elo, player1.elo, 0);
