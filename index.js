@@ -1,6 +1,7 @@
 const { App } = require('@slack/bolt');
 const { connectToDb, Player } = require('./db');
 const { getNewRating } = require('./elo');
+const { convertMentionToId } = require('./utils');
 
 // Connect to slack with bolt
 const app = new App({
@@ -35,9 +36,12 @@ app.event('app_mention', async ({ event, client }) => {
 				break;
 			case 'match':
 				console.log('match');
+				// Convert string of form <@userId> to just userId
+				const player1Id = convertMentionToId(words[2]);
+				const player2Id = convertMentionToId(words[3]);
 				// Get players from db
-				const player1 = await Player.findById(words[2]).exec();
-				const player2 = await Player.findById(words[3]).exec();
+				const player1 = await Player.findById(player1Id).exec();
+				const player2 = await Player.findById(player2Id).exec();
 				// Compute new ELO for each player
 				const player1NewElo = getNewRating(player1.elo, player2.elo, 1);
 				const player2NewElo = getNewRating(player2.elo, player1.elo, 0);
