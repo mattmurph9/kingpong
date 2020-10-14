@@ -28,9 +28,11 @@ app.event('app_mention', async ({ event, client }) => {
 		switch(action) {
 			case 'register':
 				console.log('register');
-				await Player.create({ _id: event.user, name: words[2], wins: 0, losses: 0, elo: 1000 });
+				// Get user object from slack
+				const user = await client.users.info({user: event.user});
+				await Player.create({ _id: event.user, name: user.user.profile.display_name, wins: 0, losses: 0, elo: 1000 });
 				await client.chat.postMessage({
-					text: `Successfully registered <@${event.user}> as ${words[2]}`,
+					text: `Successfully registered <@${event.user}>`,
 					channel: event.channel,
 				});
 				break;
