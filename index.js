@@ -49,7 +49,9 @@ app.event('app_mention', async ({ event, client }) => {
 				const player2NewElo = getNewRating(player2.elo, player1.elo, 0);
 				// Update each player and save to db
 				player1.elo = player1NewElo;
+				player1.wins += 1;
 				player2.elo = player2NewElo;
+				player2.losses += 1;
 				player1.save();
 				player2.save();
 				// Post message reporting new rankings
