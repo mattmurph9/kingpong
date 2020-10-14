@@ -62,8 +62,11 @@ app.event('app_mention', async ({ event, client }) => {
 				break;
 		  case 'leaderboard':
 				console.log('leaderboard');
-				let text = '';
 				const players = await Player.find({});
+				// Sort players array in descending order by ELO
+				players.sort((a, b) => b.elo - a.elo);
+				// For each player, append output string to text
+				let text = '';
 				players.forEach((player, index) => text += `${index + 1}. ${player.name} ${player.elo} record: ${player.wins}-${player.losses}\n` );
 				await client.chat.postMessage({
 					text,
