@@ -11,7 +11,9 @@
     "mongoose": "^5.10.9"
   },
   "scripts": {
-    "start": "env-cmd nodemon ./index.js"
+    "start:dev": "env-cmd nodemon ./index.js",
+    "verify": "slack-verify --secret $SLACK_SIGNING_SECRET --port=$PORT",
+    "start": "yarn verify"
   },
   "devDependencies": {
     "eslint": "7.2.0",
