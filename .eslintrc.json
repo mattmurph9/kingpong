@@ -1,3 +1,16 @@
 {
-  "extends": ["eslint:recommended", "airbnb-base"]
+  "extends": ["eslint:recommended", "airbnb-base", "prettier"],
+  "plugins": ["eslint-plugin-prettier"],
+  "rules": {
+    "arrow-parens": 0,
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "arrowParens": "avoid",
+        "endOfLine": "auto"
+      }
+    ]
+  }
 }
