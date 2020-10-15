@@ -1,7 +1,7 @@
 const { App } = require('@slack/bolt');
 const { connectToDb, Player } = require('./db');
 const { getNewRating } = require('./elo');
-const { convertMentionToId } = require('./utils');
+const { convertMentionToId, shuffle, getMatching } = require('./utils');
 
 // Connect to slack with bolt
 const app = new App({
@@ -20,7 +20,6 @@ app.event('app_mention', async ({ event, client }) => {
 
 		console.log(`Received a mention: user ${event.user} in channel ${event.channel} says ${event.text}`);
 		const words = event.text.split(' ');
-		console.log(words);
 		if(words.length < 2) {
 			invalidMessage();
 		}
@@ -30,7 +29,7 @@ app.event('app_mention', async ({ event, client }) => {
 				console.log('register');
 				// Get user object from slack
 				const user = await client.users.info({user: event.user});
-				await Player.create({ _id: event.user, name: user.user.profile.display_name, wins: 0, losses: 0, elo: 1000 });
+				await Player.create({ _id: event.user, name: user.user.profile.display_name || user.user.profile.real_name, wins: 0, losses: 0, elo: 1000 });
 				await client.chat.postMessage({
 					text: `Successfully registered <@${event.user}>`,
 					channel: event.channel,
@@ -70,6 +69,26 @@ app.event('app_mention', async ({ event, client }) => {
 				players.forEach((player, index) => text += `${index + 1}. ${player.name} ${player.elo} record: ${player.wins}-${player.losses}\n` );
 				await client.chat.postMessage({
 					text,
+					channel: event.channel,
+				});
+				break;
+		  case 'matchmake':
+				console.log('matchmake');
+				// Get all players from db
+				const players2 = await Player.find({});
+				// Shuffle players then pairwise match them up
+				const shuffledPlayers = shuffle(players2);
+				const matchups = getMatching(shuffledPlayers);
+				// Send slack message reporting the matchups
+				let text2 = 'Here are the matchups for this week:\n';
+				matchups.forEach(matchup => {
+					if (matchup[1])
+						text2 += `${matchup[0].name} vs. ${matchup[1].name}\n`;
+					else
+						text2 += `${matchup[0].name} has a bye week`;
+				});
+				await client.chat.postMessage({
+					text: text2, 
 					channel: event.channel,
 				});
 				break;
