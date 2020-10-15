@@ -13,20 +13,17 @@ const db = connectToDb();
 
 app.event('app_mention', async ({ event, client }) => {
 	try {
-		const invalidMessage = async () => await client.chat.postMessage({
-			text: 'Invalid format',
-			channel: event.channel,
-		});
-
 		console.log(`Received a mention: user ${event.user} in channel ${event.channel} says ${event.text}`);
 		const words = event.text.split(' ');
 		if(words.length < 2) {
-			invalidMessage();
+			throw new Error('Invalid format. Use `help` for a list of commands.');
 		}
 		const action = words[1];
 		switch(action) {
 			case 'register':
 				console.log('register');
+				// Check message format
+				if (words.length !== 2) throw new Error('Invalid format. Use `help` for a list of commands.');
 				// Get user object from slack
 				const user = await client.users.info({user: event.user});
 				await Player.create({ _id: event.user, name: user.user.profile.display_name || user.user.profile.real_name, wins: 0, losses: 0, elo: 1000 });
@@ -37,6 +34,8 @@ app.event('app_mention', async ({ event, client }) => {
 				break;
 			case 'match':
 				console.log('match');
+				// Check message format
+				if (words.length !== 4) throw new Error('Invalid format. Use `help` for a list of commands.');
 				// Convert string of form <@userId> to just userId
 				const player1Id = convertMentionToId(words[2]);
 				const player2Id = convertMentionToId(words[3]);
@@ -61,6 +60,8 @@ app.event('app_mention', async ({ event, client }) => {
 				break;
 		  case 'leaderboard':
 				console.log('leaderboard');
+				// Check message format
+				if (words.length !== 2) throw new Error('Invalid format. Use `help` for a list of commands.');
 				const players = await Player.find({});
 				// Sort players array in descending order by ELO
 				players.sort((a, b) => b.elo - a.elo);
@@ -74,6 +75,8 @@ app.event('app_mention', async ({ event, client }) => {
 				break;
 		  case 'matchmake':
 				console.log('matchmake');
+				// Check message format
+				if (words.length !== 2) throw new Error('Invalid format. Use `help` for a list of commands.');
 				// Get all players from db
 				const players2 = await Player.find({});
 				// Shuffle players then pairwise match them up
@@ -92,9 +95,15 @@ app.event('app_mention', async ({ event, client }) => {
 					channel: event.channel,
 				});
 				break;
+		  case 'help':
+				console.log('help');
+				await client.chat.postMessage({
+					text: 'All commands are of the form @KingPong `<cmd>`\n\tregister\t\t\tRegisters a new player.\n\tleaderboard\tLists the current standings sorted by ELO rating.\n\tmatch\t\t\t  Reports a match played. The format is `@WinningPlayer @LosingPlayer`. Scores are not necessary.\n\tmatchmake\t Randomly matches all registered players. If an odd number of players, one will have a bye.',
+					channel: event.channel,
+				});
 		  default:
 				await client.chat.postMessage({
-					text: 'Unrecognized action. Try `register`, `match` or `leaderboard`.',
+					text: 'Unrecognized command. Try `help` for a list of commands.',
 					channel: event.channel,
 				});
 		}
@@ -105,9 +114,9 @@ app.event('app_mention', async ({ event, client }) => {
 				channel: event.channel,
 			});
 		} else {
-			console.log(e);
+			const text = e.message ? e.message : 'There was an error. Please try again.';
 			await client.chat.postMessage({
-				text: 'There was an error. Please try again.',
+				text,
 				channel: event.channel,
 			});
 		}
