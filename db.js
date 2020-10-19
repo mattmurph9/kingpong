@@ -8,6 +8,11 @@ const playerSchema = mongoose.Schema({
   elo: Number,
 });
 
+const installSchema = mongoose.Schema({
+  _id: String,
+  installation: Object,
+});
+
 // Connect to mongodb
 module.exports = {
   connectToDb: () => {
@@ -22,4 +27,5 @@ module.exports = {
     });
   },
   Player: mongoose.model('Player', playerSchema),
+  Install: mongoose.model('Install', installSchema),
 };

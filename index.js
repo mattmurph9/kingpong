@@ -1,5 +1,5 @@
 const { App } = require('@slack/bolt');
-const { connectToDb, Player } = require('./db');
+const { connectToDb, Player, Install } = require('./db');
 const { getNewRating } = require('./elo');
 const { convertMentionToId, shuffle, getMatching } = require('./utils');
 
@@ -7,6 +7,19 @@ const { convertMentionToId, shuffle, getMatching } = require('./utils');
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
+  clientId: process.env.SLACK_CLIENT_ID,
+  scopes: ['app_mentions:read', 'chat:write', 'users:read'],
+  installationStore: {
+    storeInstallation: async installation =>
+      Install.create({
+        _id: installation.team.id,
+        installation,
+      }),
+    fetchInstallation: async installQuery => {
+      const install = await Install.findById(installQuery.team.id).exec();
+      return install.installation;
+    },
+  },
 });
 
 connectToDb();
