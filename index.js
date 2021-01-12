@@ -5,9 +5,11 @@ const { convertMentionToId, shuffle, getMatching } = require('./utils');
 
 // Connect to slack with bolt
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
+  // token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   clientId: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  stateSecret: 'matts-state-secret',
   scopes: ['app_mentions:read', 'chat:write', 'users:read'],
   installationStore: {
     storeInstallation: async installation =>
@@ -26,6 +28,7 @@ connectToDb();
 
 app.event('app_mention', async ({ event, client }) => {
   try {
+    console.log('MADE IT HERE');
     const words = event.text.split(' ');
     if (words.length < 2) {
       throw new Error('Invalid format. Use `help` for a list of commands.');
