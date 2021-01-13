@@ -18,7 +18,7 @@ const app = new App({
         installation,
       }),
     fetchInstallation: async installQuery => {
-      const install = await Install.findById(installQuery.team.id).exec();
+      const install = await Install.findById(installQuery.teamId).exec();
       return install.installation;
     },
   },
@@ -28,7 +28,6 @@ connectToDb();
 
 app.event('app_mention', async ({ event, client }) => {
   try {
-    console.log('MADE IT HERE');
     const words = event.text.split(' ');
     if (words.length < 2) {
       throw new Error('Invalid format. Use `help` for a list of commands.');
